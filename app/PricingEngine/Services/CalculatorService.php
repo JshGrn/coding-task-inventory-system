@@ -26,16 +26,19 @@ class CalculatorService
          * Iterate over each calculator and apply discounts in
          * order starting with the product base price
          */
+        $calculatedPrice = (int)$this->discountCalculators->reduce(
+            fn(int $currentPrice, DiscountCalculatorInterface $calculator) => $calculator->apply(
+                currentPrice: $currentPrice,
+                product: $product,
+                user: $user
+            ),
+            $product->price
+        );
+
         return new CalculatedProduct(
             product: $product,
-            calculatedPrice: (int)$this->discountCalculators->reduce(
-                fn(int $currentPrice, DiscountCalculatorInterface $calculator) => $calculator->apply(
-                    currentPrice: $currentPrice,
-                    product: $product,
-                    user: $user
-                ),
-                $product->price
-            )
+            calculatedPrice: $calculatedPrice,
+            calculatedDiscount: $product->price - $calculatedPrice
         );
     }
 

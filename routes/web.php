@@ -17,4 +17,5 @@ Route::group(['prefix' => 'auth', 'as' => 'auth.'], function () {
 
 Route::group(['middleware' => 'auth'], function () {
     Route::get('/products', [ProductsController::class, 'index'])->name('products.index');
+    Route::get('/products/{product}', [ProductsController::class, 'view'])->name('products.view');
 });

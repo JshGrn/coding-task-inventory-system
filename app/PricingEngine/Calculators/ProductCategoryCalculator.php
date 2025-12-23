@@ -21,7 +21,7 @@ class ProductCategoryCalculator implements DiscountCalculatorInterface
         /** @var ProductCategory $productCategory */
         $productCategory = $product->productCategory;
 
-        if ($this->hasValidDiscount($productCategory) === false) {
+        if ($productCategory->hasValidDiscount() === false) {
             return $currentPrice;
         }
 
@@ -31,18 +31,5 @@ class ProductCategoryCalculator implements DiscountCalculatorInterface
             currentPrice: $currentPrice,
             discountValue: $productCategory->discount_value
         );
-    }
-
-    private function hasValidDiscount(ProductCategory $productCategory): bool
-    {
-        if (empty($productCategory->discount_type) || empty($productCategory->discount_value)) {
-            return false;
-        }
-
-        if ($productCategory->discount_value === 0 || $productCategory->discount_value < 0) {
-            return false;
-        }
-
-        return true;
     }
 }

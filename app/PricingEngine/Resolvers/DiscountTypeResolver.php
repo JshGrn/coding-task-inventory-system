@@ -9,11 +9,18 @@ use App\PricingEngine\DiscountTypes\PercentageDiscountType;
 
 class DiscountTypeResolver
 {
+    public function __construct(
+        public PercentageDiscountType $percentageDiscountType,
+        public FixedDiscountType $fixedDiscountType,
+    )
+    {
+    }
+
     public function resolve(DiscountType $discountType): DiscountTypeInterface
     {
         return match ($discountType) {
-            DiscountType::Percentage => new PercentageDiscountType(),
-            DiscountType::FixedValue => new FixedDiscountType(),
+            DiscountType::Percentage => $this->percentageDiscountType,
+            DiscountType::FixedValue => $this->fixedDiscountType
         };
     }
 }

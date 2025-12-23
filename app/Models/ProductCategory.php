@@ -34,12 +34,25 @@ class ProductCategory extends Model
         return $this->hasMany(Product::class);
     }
 
-    public function getFormattedDiscountAttribute()
+    public function getFormattedDiscountAttribute(): string
     {
         return match ($this->discount_type) {
             DiscountType::Percentage => "{$this->discount_value}%",
             DiscountType::FixedValue => Money::ofMinor($this->discount_value, 'GBP')->formatTo('en_GB'),
             default => 'No discount'
         };
+    }
+
+    public function hasValidDiscount(): bool
+    {
+        if (empty($this->discount_type) || empty($this->discount_value)) {
+            return false;
+        }
+
+        if ($this->discount_value === 0 || $this->discount_value < 0) {
+            return false;
+        }
+
+        return true;
     }
 }

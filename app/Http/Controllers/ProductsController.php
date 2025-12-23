@@ -31,4 +31,16 @@ class ProductsController extends Controller
             'calculatedProductsByCategories' => $calculatedProductsByCategories,
         ]);
     }
+
+    public function view(CalculatorService $calculatorService, Product $product)
+    {
+        $calculatedProduct = $calculatorService->calculateForProduct(
+            product: $product,
+            user: auth()->user(),
+        );
+
+        return view('products.view', [
+            'calculatedProduct' => $calculatedProduct
+        ]);
+    }
 }

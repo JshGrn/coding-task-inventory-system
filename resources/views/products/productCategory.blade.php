@@ -23,8 +23,10 @@
         @forelse($calculatedProducts as $calculatedProduct)
             <tr class="hover:bg-gray-50">
                 <td class="px-6 py-4">
-                    <div>
-                        {{ $calculatedProduct->product->title }}
+                    <div class="block mb-2 last:mb-0">
+                        <a class="underline text-lg" href="{{route('products.view', ['product' => $calculatedProduct->product])}}">
+                            {{ $calculatedProduct->product->title }}
+                        </a>
                     </div>
                     @if($calculatedProduct->product->description)
                         <div class=" text-gray-500">
