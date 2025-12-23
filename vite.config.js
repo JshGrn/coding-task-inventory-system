@@ -14,5 +14,11 @@ export default defineConfig({
         watch: {
             ignored: ['**/storage/framework/views/**'],
         },
+        hmr: {
+            protocol: 'wss',
+            host: 'coding-task-inventory-system.ddev.site',
+        },
+        host: '0.0.0.0',
+        port: 5173
     },
 });

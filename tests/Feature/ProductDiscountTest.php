@@ -1,67 +1,70 @@
 <?php
 
+use App\Enums\DiscountType;
+use App\Enums\UserRole;
 use App\Models\Product;
 use App\Models\ProductCategory;
 use App\Models\User;
+use App\PricingEngine\Services\CalculatorService;
 
-test('product is discounted by 5 pounds for customer', function () {
+test('product category discounts apply correctly', function (
+    DiscountType $discountType,
+    int $discountValue,
+    bool $isUserWholesale,
+    int $productPrice,
+    int $expectedPrice
+) {
     /** @var ProductCategory $productCategory */
     $productCategory = ProductCategory::factory()
-        ->fixedValueDiscounted(500)
+        ->create([
+            'discount_value' => $discountValue,
+            'discount_type' => $discountType,
+        ]);
+
+    /** @var Product $product */
+    $product = Product::factory()->create([
+        'product_category_id' => $productCategory->getKey(),
+        'price' => $productPrice,
+    ]);
+
+    $calculatedPrice = app(CalculatorService::class)->calculateForProduct(
+        product: $product,
+        user: User::factory()->create([
+            'role' => $isUserWholesale ? UserRole::WholesaleCustomer : UserRole::Customer,
+        ])
+    )->getCalculatedPrice();
+
+    expect($calculatedPrice)->toBe($expectedPrice);
+})->with([
+    '10 percent discount standard customer' => [DiscountType::Percentage, 10, false, 20000, 18000],
+    '50 percent discount standard customer' => [DiscountType::Percentage, 50, false, 10000, 5000],
+    '25 percent discount wholesale customer' => [DiscountType::Percentage, 25, true, 20000, 12000],
+    '5 pound discount standard customer' => [DiscountType::FixedValue, 500, false, 15000, 14500],
+    '20 pound discount wholesale customer' => [DiscountType::FixedValue, 2000, true, 15000, 10400],
+]);
+
+test('wholesale customer discounts apply', function (
+    int $productPrice,
+    int $expectedPrice
+) {
+    /** @var ProductCategory $productCategory */
+    $productCategory = ProductCategory::factory()
         ->create();
 
     /** @var Product $product */
     $product = Product::factory()->create([
         'product_category_id' => $productCategory->getKey(),
-        'price' => 12500,
+        'price' => $productPrice,
     ]);
 
-    $calculatedPrice = new \App\PricingEngine\Calculator()->calculateForProduct(
+    $calculatedPrice = app(CalculatorService::class)->calculateForProduct(
         product: $product,
-        productCategory: $productCategory,
-        user: User::factory()->create()
-    );
-
-    expect($calculatedPrice)->toBe(12000);
-});
-
-test('product is discounted by 5 pounds and 20 percent for wholesale customer', function () {
-    /** @var ProductCategory $productCategory */
-    $productCategory = ProductCategory::factory()
-        ->fixedValueDiscounted(500)
-        ->create();
-
-    /** @var Product $product */
-    $product = Product::factory()->create([
-        'product_category_id' => $productCategory->getKey(),
-        'price' => 12500,
-    ]);
-
-    $calculatedPrice = new \App\PricingEngine\Calculator()->calculateForProduct(
-        product: $product,
-        productCategory: $productCategory,
         user: User::factory()->isWholesale()->create()
-    );
+    )->getCalculatedPrice();
 
-    expect($calculatedPrice)->toBe(9600);
-});
-
-test('product is discounted by 20 percent for wholesale customer', function () {
-    /** @var ProductCategory $productCategory */
-    $productCategory = ProductCategory::factory()
-        ->create();
-
-    /** @var Product $product */
-    $product = Product::factory()->create([
-        'product_category_id' => $productCategory->getKey(),
-        'price' => 20000,
-    ]);
-
-    $calculatedPrice = new \App\PricingEngine\Calculator()->calculateForProduct(
-        product: $product,
-        productCategory: $productCategory,
-        user: User::factory()->isWholesale()->create()
-    );
-
-    expect($calculatedPrice)->toBe(16000);
-});
+    expect($calculatedPrice)->toBe($expectedPrice);
+})->with([
+    [10000, 8000],
+    [5000, 4000],
+    [20000, 16000],
+]);
